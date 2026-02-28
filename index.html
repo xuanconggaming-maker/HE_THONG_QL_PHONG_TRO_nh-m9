@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản Lý Phòng Trọ - Đăng Nhập</title>
+    <style>
+      /* 1. CSS - ĐÃ TỐI ƯU CHO MOBILE (DỌC) VÀ PC (NGANG) */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+      }
+
+      body {
+        background: #f0f2f5;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 400px;
+        z-index: 1;
+      }
+
+      h2 {
+        text-align: center;
+        color: #1a73e8;
+        margin-bottom: 25px;
+        text-transform: uppercase;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+        font-weight: 600;
+      }
+
+      input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        outline: none;
+        font-size: 16px;
+      }
+
+      input:focus {
+        border-color: #1a73e8;
+        box-shadow: 0 0 5px rgba(26, 115, 232, 0.2);
+      }
+
+      button {
+        width: 100%;
+        padding: 12px;
+        background: #1a73e8;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: background 0.3s;
+      }
+
+      button:hover {
+        background: #1557b0;
+      }
+
+      .copyright {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 14px;
+        color: #666;
+        text-align: center;
+        width: 100%;
+      }
+
+      /* RESPONSIVE */
+      @media (min-width: 768px) {
+        body {
+          background: linear-gradient(120deg, #e0eafc, #cfdef3);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .container {
+          box-shadow: none;
+          background: transparent;
+        }
+        body {
+          background: white;
+          justify-content: flex-start;
+          padding-top: 80px;
+        }
+        .copyright {
+          bottom: 10px;
+          font-size: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Nhà Trọ Xóm 9</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Tài khoản</label>
+          <input
+            type="text"
+            id="username"
+            placeholder="admin hoặc khach"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label>Mật khẩu</label>
+          <input type="password" id="password" placeholder="******" required />
+        </div>
+        <button type="submit">ĐĂNG NHẬP</button>
+      </form>
+    </div>
+
+    <div class="copyright">&copy; 2026 Hệ Thống Quản Lý Phòng Trọ Xóm 9</div>
+
+    <script>
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const userIn = document
+            .getElementById("username")
+            .value.toLowerCase()
+            .trim();
+          const passIn = document.getElementById("password").value.trim();
+
+          // Lấy dữ liệu từ localStorage (do Admin cấp ở trang taikhoan.html)
+          let accounts = JSON.parse(
+            localStorage.getItem("danhSachTaiKhoan"),
+          ) || { admin: "admin" };
+
+          if (accounts[userIn] && accounts[userIn] === passIn) {
+            // LƯU SỐ PHÒNG VÀO BỘ NHỚ TẠM
+            sessionStorage.setItem("roomNumber", userIn);
+
+            if (userIn === "admin") {
+              window.location.href = "trangtong.html";
+            } else {
+              // Tất cả khách thuê đều dẫn về một trang chủ dùng chung
+              window.location.href = "trangchu.html";
+            }
+          } else {
+            alert("Sai tài khoản hoặc mật khẩu!");
+          }
+        });
+    </script>
+  </body>
+</html>

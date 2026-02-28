@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản Lý Tổng - Admin</title>
+    <style>
+      /* TỐI ƯU TỶ LỆ MÀN HÌNH (16:9 và 9:26) */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", sans-serif;
+      }
+
+      body {
+        background: #f0f2f5;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Nav điều chỉnh theo màn hình */
+      nav {
+        background: #1a73e8;
+        color: white;
+        padding: 15px 5%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+      }
+
+      .nav-right {
+        display: flex;
+        gap: 10px;
+      }
+
+      .container {
+        padding: 20px;
+        width: 100%;
+        max-width: 1200px;
+        margin: auto;
+        flex: 1;
+      }
+
+      .card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        margin-bottom: 25px;
+      }
+
+      /* Header chứa nút Thêm phòng bên phải */
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        gap: 10px;
+      }
+
+      /* Nút bấm */
+      .btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: bold;
+        cursor: pointer;
+        border: none;
+        font-size: 14px;
+        transition: 0.2s;
+        white-space: nowrap;
+      }
+      .btn-white {
+        background: white;
+        color: #1a73e8;
+      }
+      .btn-add {
+        background: #1a73e8;
+        color: white;
+      }
+      .btn-update {
+        background: #28a745;
+        color: white;
+        padding: 6px 10px;
+      }
+      .btn-logout {
+        background: #ff4d4d;
+        color: white;
+      }
+
+      /* Bảng hiển thị (Tự động cuộn trên mobile) */
+      .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px;
+      }
+      th,
+      td {
+        border: 1px solid #eee;
+        padding: 12px;
+        text-align: center;
+      }
+      th {
+        background: #f8f9fa;
+        color: #555;
+        font-size: 14px;
+      }
+
+      input {
+        width: 80px;
+        padding: 6px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-align: center;
+      }
+
+      /* RESPONSIVE CHO MÀN HÌNH DỌC (9:26 - Mobile) */
+      @media (max-width: 600px) {
+        nav {
+          padding: 10px;
+          flex-direction: column;
+          gap: 10px;
+          text-align: center;
+        }
+        .card-header {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .btn-add {
+          width: 100%;
+          text-align: center;
+        }
+        th,
+        td {
+          padding: 8px;
+          font-size: 13px;
+        }
+        input {
+          width: 60px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <h2>Quản Lý Xóm 9</h2>
+      <div class="nav-right">
+        <a href="taikhoan.html" class="btn btn-white">Quản Lý Tài Khoản</a>
+        <a href="index.html" class="btn btn-logout">Thoát</a>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="card">
+        <div class="card-header">
+          <h3>Cập Nhật Hóa Đơn Hàng Tháng</h3>
+          <button class="btn btn-add" onclick="addNewRoom()">
+            + Thêm Phòng
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Phòng</th>
+                <th>Tháng</th>
+                <th>Tiền Phòng</th>
+                <th>Tiền Điện</th>
+                <th>Tiền Nước</th>
+                <th>Hành Động</th>
+              </tr>
+            </thead>
+            <tbody id="adminBillList"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Lịch Sử Thanh Toán</h3>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Thời gian báo</th>
+                <th>Phòng</th>
+                <th>Tháng</th>
+                <th>Số Tiền</th>
+                <th>Trạng Thái</th>
+              </tr>
+            </thead>
+            <tbody id="historyList"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Hàm Thêm Phòng Mới
+      function addNewRoom() {
+        const roomName = prompt("Nhập mã phòng mới (VD: p103):");
+        if (roomName) {
+          const roomKey = roomName.toLowerCase().trim();
+          let accounts = JSON.parse(
+            localStorage.getItem("danhSachTaiKhoan"),
+          ) || { admin: "admin" };
+
+          if (accounts[roomKey]) {
+            alert("Phòng này đã tồn tại!");
+          } else {
+            accounts[roomKey] = "123"; // Mật khẩu mặc định
+            localStorage.setItem("danhSachTaiKhoan", JSON.stringify(accounts));
+            alert("Đã thêm phòng " + roomKey.toUpperCase());
+            loadData();
+          }
+        }
+      }
+
+      // Hàm Tải Dữ Liệu
+      function loadData() {
+        const accounts = JSON.parse(
+          localStorage.getItem("danhSachTaiKhoan"),
+        ) || { admin: "admin" };
+        const bills = JSON.parse(localStorage.getItem("duLieuHoaDon")) || {};
+        const history =
+          JSON.parse(localStorage.getItem("lichSuThanhToan")) || [];
+
+        const billBody = document.getElementById("adminBillList");
+        billBody.innerHTML = "";
+
+        for (let room in accounts) {
+          if (room === "admin") continue;
+          const data = bills[room] || { thang: "", phong: 0, dien: 0, nuoc: 0 };
+          billBody.innerHTML += `
+                    <tr>
+                        <td><strong>${room.toUpperCase()}</strong></td>
+                        <td><input type="text" id="thang-${room}" value="${data.thang}" placeholder="Tháng"></td>
+                        <td><input type="number" id="phong-${room}" value="${data.phong}"></td>
+                        <td><input type="number" id="dien-${room}" value="${data.dien}"></td>
+                        <td><input type="number" id="nuoc-${room}" value="${data.nuoc}"></td>
+                        <td><button class="btn btn-update" onclick="updateBill('${room}')">Cập nhật</button></td>
+                    </tr>`;
+        }
+
+        const historyBody = document.getElementById("historyList");
+        const historyReversed = [...history].reverse();
+        historyBody.innerHTML = historyReversed
+          .map(
+            (item) => `
+                <tr>
+                    <td>${item.time}</td>
+                    <td><b style="color:#1a73e8">${item.room}</b></td>
+                    <td>Tháng ${item.thangAt || "--"}</td>
+                    <td>${item.amount} đ</td>
+                    <td style="color:green; font-weight:bold;">✔ Đã báo</td>
+                </tr>
+            `,
+          )
+          .join("");
+        if (history.length === 0)
+          historyBody.innerHTML =
+            '<tr><td colspan="5">Chưa có giao dịch nào</td></tr>';
+      }
+
+      // Hàm Cập Nhật Hóa Đơn
+      function updateBill(room) {
+        const thang = document.getElementById(`thang-${room}`).value;
+        const phong = document.getElementById(`phong-${room}`).value;
+        const dien = document.getElementById(`dien-${room}`).value;
+        const nuoc = document.getElementById(`nuoc-${room}`).value;
+
+        let bills = JSON.parse(localStorage.getItem("duLieuHoaDon")) || {};
+        // Khi Admin cập nhật tiền mới, reset isPaid = false để khách thấy hóa đơn mới
+        bills[room] = { thang, phong, dien, nuoc, isPaid: false };
+        localStorage.setItem("duLieuHoaDon", JSON.stringify(bills));
+
+        alert("Đã cập nhật hóa đơn cho " + room.toUpperCase());
+        loadData();
+      }
+
+      window.onload = loadData;
+    </script>
+  </body>
+</html>

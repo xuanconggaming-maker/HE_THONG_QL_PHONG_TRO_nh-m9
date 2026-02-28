@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản Lý Tài Khoản - Admin</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", sans-serif;
+      }
+      body {
+        background: #f0f2f5;
+        min-height: 100vh;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .container {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 800px;
+      }
+      h2 {
+        color: #1a73e8;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #555;
+      }
+      input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 16px;
+      }
+      .btn-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      button,
+      .btn-link {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.3s;
+        text-align: center;
+        text-decoration: none;
+      }
+      .btn-add {
+        background: #1a73e8;
+        color: white;
+      }
+      .btn-back {
+        background: #666;
+        color: white;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 30px;
+      }
+      th,
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+        text-align: center;
+      }
+      th {
+        background: #f8f9fa;
+        color: #1a73e8;
+      }
+      .btn-delete {
+        background: #ff4d4d;
+        color: white;
+        padding: 5px 8px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+      }
+      .btn-gmail {
+        background: #ea4335;
+        color: white;
+        padding: 5px 8px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Quản Lý Tài Khoản & Gmail Khách</h2>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+        <div class="form-group">
+          <label>Mã Phòng</label>
+          <input type="text" id="newUsername" placeholder="Ví dụ: p101" />
+        </div>
+        <div class="form-group">
+          <label>Mật khẩu</label>
+          <input type="text" id="newPassword" value="123" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Gmail Khách Thuê</label>
+        <input type="email" id="newEmail" placeholder="khachhang@gmail.com" />
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-add" onclick="saveAccount()">LƯU THÔNG TIN</button>
+        <a href="trangtong.html" class="btn-link btn-back">QUAY LẠI</a>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Phòng</th>
+            <th>Mật Khẩu</th>
+            <th>Gmail</th>
+            <th>Hành Động</th>
+          </tr>
+        </thead>
+        <tbody id="accountList"></tbody>
+      </table>
+    </div>
+
+    <script>
+      // Khởi tạo dữ liệu
+      function initData() {
+        if (!localStorage.getItem("danhSachTaiKhoan")) {
+          localStorage.setItem(
+            "danhSachTaiKhoan",
+            JSON.stringify({ admin: "admin" }),
+          );
+        }
+        if (!localStorage.getItem("danhSachEmail")) {
+          localStorage.setItem("danhSachEmail", JSON.stringify({}));
+        }
+        renderTable();
+      }
+
+      function renderTable() {
+        const accounts = JSON.parse(localStorage.getItem("danhSachTaiKhoan"));
+        const emails = JSON.parse(localStorage.getItem("danhSachEmail")) || {};
+        const tbody = document.getElementById("accountList");
+        tbody.innerHTML = "";
+
+        for (let user in accounts) {
+          if (user === "admin") continue;
+          const email = emails[user] || "Chưa cập nhật";
+
+          tbody.innerHTML += `
+                <tr>
+                    <td><strong>${user.toUpperCase()}</strong></td>
+                    <td>${accounts[user]}</td>
+                    <td><small>${email}</small></td>
+                    <td>
+                        <button class="btn-gmail" onclick="sendGmail('${email}', '${user}')">Gửi Mail</button>
+                        <button class="btn-delete" onclick="deleteAccount('${user}')">Xóa</button>
+                    </td>
+                </tr>
+            `;
+        }
+      }
+
+      function saveAccount() {
+        const user = document
+          .getElementById("newUsername")
+          .value.trim()
+          .toLowerCase();
+        const pass = document.getElementById("newPassword").value.trim();
+        const email = document.getElementById("newEmail").value.trim();
+
+        if (!user || !pass) {
+          alert("Vui lòng nhập Mã phòng và Mật khẩu!");
+          return;
+        }
+
+        // Lưu tài khoản
+        let accounts = JSON.parse(localStorage.getItem("danhSachTaiKhoan"));
+        accounts[user] = pass;
+        localStorage.setItem("danhSachTaiKhoan", JSON.stringify(accounts));
+
+        // Lưu email
+        let emails = JSON.parse(localStorage.getItem("danhSachEmail")) || {};
+        emails[user] = email;
+        localStorage.setItem("danhSachEmail", JSON.stringify(emails));
+
+        alert("Đã cập nhật thông tin phòng " + user.toUpperCase());
+        renderTable();
+      }
+
+      function sendGmail(toEmail, room) {
+        if (!toEmail || toEmail === "Chưa cập nhật") {
+          alert("Phòng này chưa có địa chỉ Gmail!");
+          return;
+        }
+
+        // Lấy dữ liệu hóa đơn để gửi kèm (nếu có)
+        const bills = JSON.parse(localStorage.getItem("duLieuHoaDon")) || {};
+        const myBill = bills[room] || {
+          phong: 0,
+          dien: 0,
+          nuoc: 0,
+          thang: "?",
+        };
+        const total =
+          parseInt(myBill.phong) +
+          parseInt(myBill.dien) +
+          parseInt(myBill.nuoc);
+
+        const subject = encodeURIComponent(
+          `THÔNG BÁO TIỀN PHÒNG ${room.toUpperCase()} - THÁNG ${myBill.thang}`,
+        );
+        const body = encodeURIComponent(
+          `Chào bạn,\n\nĐây là thông báo tiền phòng từ xuanconggaming@gmail.com:\n` +
+            `- Tiền phòng: ${parseInt(myBill.phong).toLocaleString()}đ\n` +
+            `- Tiền điện: ${parseInt(myBill.dien).toLocaleString()}đ\n` +
+            `- Tiền nước: ${parseInt(myBill.nuoc).toLocaleString()}đ\n` +
+            `---------------------------\n` +
+            `Tổng cộng: ${total.toLocaleString()}đ\n\n` +
+            `Vui lòng đăng nhập vào hệ thống để thanh toán. Cảm ơn!`,
+        );
+
+        // Mở ứng dụng Gmail
+        window.location.href = `mailto:${toEmail}?subject=${subject}&body=${body}`;
+      }
+
+      function deleteAccount(user) {
+        if (confirm("Xóa tài khoản " + user + "?")) {
+          let accounts = JSON.parse(localStorage.getItem("danhSachTaiKhoan"));
+          let emails = JSON.parse(localStorage.getItem("danhSachEmail"));
+          delete accounts[user];
+          delete emails[user];
+          localStorage.setItem("danhSachTaiKhoan", JSON.stringify(accounts));
+          localStorage.setItem("danhSachEmail", JSON.stringify(emails));
+          renderTable();
+        }
+      }
+
+      initData();
+    </script>
+  </body>
+</html>

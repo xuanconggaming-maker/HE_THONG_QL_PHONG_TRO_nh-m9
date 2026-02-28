@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trang Riêng Khách Thuê</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", sans-serif;
+      }
+      body {
+        background: #f4f7f6;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+      }
+      .card {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 450px;
+        text-align: center;
+      }
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 16px;
+      }
+      .total-price {
+        font-size: 24px;
+        color: #d32f2f;
+        font-weight: bold;
+        margin: 15px 0;
+        border-top: 1px solid #eee;
+        padding-top: 10px;
+      }
+      .btn-pay {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 15px;
+        border-radius: 8px;
+        width: 100%;
+        font-size: 18px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      #btnConfirm {
+        background: #1a73e8;
+        color: white;
+        border: none;
+        padding: 15px;
+        border-radius: 8px;
+        width: 100%;
+        margin-top: 10px;
+        cursor: pointer;
+        display: none;
+        font-weight: bold;
+      }
+      .qr-area {
+        display: none;
+        margin-top: 20px;
+        border: 1px dashed #ccc;
+        padding: 10px;
+        border-radius: 10px;
+      }
+      .qr-area img {
+        width: 100%;
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1 id="roomTitle" style="color: #1a73e8; margin-bottom: 10px">
+        PHÒNG ...
+      </h1>
+      <p
+        id="thangHienTai"
+        style="font-weight: bold; color: #666; margin-bottom: 20px"
+      >
+        Hóa đơn tháng: --
+      </p>
+
+      <div id="billContent">
+        <div class="info-row">
+          <p>Tiền phòng:</p>
+          <p><strong id="phongVal">0</strong> đ</p>
+        </div>
+        <div class="info-row">
+          <p>Tiền điện:</p>
+          <p><strong id="dienVal">0</strong> đ</p>
+        </div>
+        <div class="info-row">
+          <p>Tiền nước:</p>
+          <p><strong id="nuocVal">0</strong> đ</p>
+        </div>
+        <div class="total-price">TỔNG: <span id="totalVal">0</span> đ</div>
+        <button class="btn-pay" id="btnPay" onclick="showQR()">
+          THANH TOÁN QUA QR
+        </button>
+      </div>
+
+      <div
+        id="paidMessage"
+        style="display: none; color: green; font-weight: bold; padding: 20px"
+      >
+        🎉 Bạn đã thanh toán hóa đơn tháng này!
+      </div>
+
+      <div id="qrArea" class="qr-area">
+        <img id="qrImage" src="" alt="Mã QR" />
+        <p style="margin: 10px 0; font-weight: bold">
+          VU XUAN CONG - 4619092006
+        </p>
+        <button id="btnConfirm" onclick="handleConfirm()">
+          TÔI ĐÃ CHUYỂN KHOẢN XONG
+        </button>
+      </div>
+
+      <a
+        href="index.html"
+        style="
+          display: block;
+          margin-top: 20px;
+          color: #888;
+          text-decoration: none;
+        "
+        >Đăng xuất</a
+      >
+    </div>
+
+    <script>
+      const room = sessionStorage.getItem("roomNumber");
+      const bills = JSON.parse(localStorage.getItem("duLieuHoaDon")) || {};
+      const myData = bills[room] || {
+        thang: "-",
+        phong: 0,
+        dien: 0,
+        nuoc: 0,
+        isPaid: false,
+      };
+
+      document.getElementById("roomTitle").innerText =
+        "PHÒNG " + room.toUpperCase();
+      document.getElementById("thangHienTai").innerText =
+        "Hóa đơn tháng: " + myData.thang;
+
+      // Nếu đã thanh toán thì ẩn hóa đơn, hiện thông báo
+      if (myData.isPaid) {
+        document.getElementById("billContent").style.display = "none";
+        document.getElementById("paidMessage").style.display = "block";
+      } else {
+        const total =
+          parseInt(myData.phong) +
+          parseInt(myData.dien) +
+          parseInt(myData.nuoc);
+        document.getElementById("phongVal").innerText = parseInt(
+          myData.phong,
+        ).toLocaleString();
+        document.getElementById("dienVal").innerText = parseInt(
+          myData.dien,
+        ).toLocaleString();
+        document.getElementById("nuocVal").innerText = parseInt(
+          myData.nuoc,
+        ).toLocaleString();
+        document.getElementById("totalVal").innerText = total.toLocaleString();
+
+        window.currentTotal = total;
+        window.currentThang = myData.thang;
+      }
+
+      function showQR() {
+        const desc = `Thanh toan phong ${room.toUpperCase()} thang ${window.currentThang}`;
+        document.getElementById("qrImage").src =
+          `https://img.vietqr.io/image/mbbank-4619092006-compact.png?amount=${window.currentTotal}&addInfo=${desc}`;
+        document.getElementById("qrArea").style.display = "block";
+        document.getElementById("btnConfirm").style.display = "block";
+        document.getElementById("btnPay").style.display = "none";
+      }
+
+      function handleConfirm() {
+        // 1. Cập nhật trạng thái hóa đơn của phòng này thành ĐÃ THANH TOÁN
+        bills[room].isPaid = true;
+        localStorage.setItem("duLieuHoaDon", JSON.stringify(bills));
+
+        // 2. Lưu vào lịch sử cho Admin
+        let history = JSON.parse(localStorage.getItem("lichSuThanhToan")) || [];
+        history.push({
+          time: new Date().toLocaleString("vi-VN"),
+          room: room.toUpperCase(),
+          thangAt: window.currentThang,
+          amount: window.currentTotal.toLocaleString(),
+        });
+        localStorage.setItem("lichSuThanhToan", JSON.stringify(history));
+
+        alert("Cảm ơn! Bạn đã báo thanh toán thành công.");
+        location.reload(); // Reload để số tiền về 0 và hiện chữ "Đã thanh toán"
+      }
+    </script>
+  </body>
+</html>
