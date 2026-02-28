@@ -146,31 +146,45 @@
         .getElementById("loginForm")
         .addEventListener("submit", function (e) {
           e.preventDefault();
+
+          // 1. Lấy dữ liệu người dùng nhập vào
           const userIn = document
             .getElementById("username")
             .value.toLowerCase()
             .trim();
           const passIn = document.getElementById("password").value.trim();
 
-          // Lấy dữ liệu từ localStorage (do Admin cấp ở trang taikhoan.html)
-          let accounts = JSON.parse(
-            localStorage.getItem("danhSachTaiKhoan"),
-          ) || { admin: "admin" };
+          // 2. Lấy danh sách tài khoản khách từ bộ nhớ (nếu có)
+          let accounts =
+            JSON.parse(localStorage.getItem("danhSachTaiKhoan")) || {};
 
-          if (accounts[userIn] && accounts[userIn] === passIn) {
-            // LƯU SỐ PHÒNG VÀO BỘ NHỚ TẠM
+          // 3. KIỂM TRA ĐĂNG NHẬP
+
+          // Trường hợp 1: Kiểm tra tài khoản ADMIN (Cố định để không bao giờ lỗi)
+          if (userIn === "admin" && passIn === "admin") {
+            sessionStorage.setItem("roomNumber", "admin");
+            window.location.href = "trangtong.html";
+          }
+          // Trường hợp 2: Kiểm tra tài khoản KHÁCH (Lấy từ trang taikhoan.html)
+          else if (accounts[userIn] && accounts[userIn] === passIn) {
             sessionStorage.setItem("roomNumber", userIn);
-
-            if (userIn === "admin") {
-              window.location.href = "trangtong.html";
-            } else {
-              // Tất cả khách thuê đều dẫn về một trang chủ dùng chung
-              window.location.href = "trangchu.html";
-            }
-          } else {
-            alert("Sai tài khoản hoặc mật khẩu!");
+            window.location.href = "trangchu.html";
+          }
+          // Trường hợp 3: Sai thông tin
+          else {
+            alert(
+              "Sai tài khoản hoặc mật khẩu! (Lưu ý: Admin mặc định là admin/admin)",
+            );
           }
         });
+
+      // HÀM BỔ TRỢ: Đảm bảo khi vào trang taikhoan.html không bị mất admin
+      if (!localStorage.getItem("danhSachTaiKhoan")) {
+        localStorage.setItem(
+          "danhSachTaiKhoan",
+          JSON.stringify({ admin: "admin" }),
+        );
+      }
     </script>
   </body>
 </html>
